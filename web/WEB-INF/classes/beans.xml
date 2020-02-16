@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+<!--    配置service-->
+<!--    bean id:用于之后从spring容器获得实例时使用的-->
+<!--    class：需要创建实例的全限定类名-->
+<!--    创建service-->
+    <bean id="BookServiceId" class="di.BookServiceImpl">
+<!--        property用于进行属性注入-->
+<!--        name：bean的属性名，通过setter方法获得-->
+<!--        ref：另一个bean的id值的引用-->
+        <property name="bookDao" ref="BookDaoId"></property>
+    </bean>
+<!--    创建dao实例-->
+    <bean id="BookDaoId" class="di.BookDaoImpl"></bean>
+</beans>

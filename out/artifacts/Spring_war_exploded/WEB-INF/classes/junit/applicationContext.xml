@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+
+
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+
+<!--    datasource-->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="com.mysql.jdbc.Driver"></property>
+        <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/spring"></property>
+        <property name="user" value="root"></property>
+        <property name="password" value="123456"></property>
+    </bean>
+<!--    dao-->
+    <bean id="accountDao" class="aop_xml.AcountDaoImpl">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+<!--    service-->
+    <bean id="serviceId" class="aop_xml.AccountServiceImpl">
+        <property name="acountDao" ref="accountDao"></property>
+    </bean>
+<!--    4.事务管理-->
+    <!--4.1事务管理器-->
+        <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+            <property name="dataSource" ref="dataSource"></property>
+        </bean>
+    <!--4.2事务详情，在aop筛选基础上,对AC三个确定使用什么样的事务
+        <tx:attributes>用于配置事务详情（属性）
+        <tx:method name="transfer"/>详情的具体配置
+        -->
+    <tx:advice id="txAdvice" transaction-manager="txManager">
+        <tx:attributes>
+            <tx:method name="transfer" propagation="REQUIRED" isolation="DEFAULT"/>
+        </tx:attributes>
+    </tx:advice>
+    <!--4.3 AOP目标类有ABCD（4个连接点），切入点表达式确定需要增强的连接点，从而获得切入点ABC-->
+    <aop:config>
+        <aop:advisor advice-ref="txAdvice" pointcut="execution(* aop_xml..*.*(..))"/>
+    </aop:config>
+</beans>

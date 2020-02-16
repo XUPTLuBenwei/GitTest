@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-4.0.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+<!--    service代理对象-->
+<!--    1.proxyInterfaces接口-->
+<!--    2.target目标类-->
+<!--    3.transactionManager事务管理器-->
+<!--    4.transactionAttributes事务属性-->
+<!--        key:确定哪些方法使用当前事务配置-->
+<!--        text:用于配置事务详情，不写即为默认-->
+    <bean id="proxyAccountService" class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+        <property name="proxyInterfaces" value="service.AccountService"></property>
+        <property name="target" ref="serviceId"></property>
+        <property name="transactionManager" ref="txManager"></property>
+        <property name="transactionAttributes">
+            <props>
+                <prop key="transfer"></prop>
+            </props>
+        </property>
+    </bean>
+<!--    datasource-->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="com.mysql.jdbc.Driver"></property>
+        <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/spring"></property>
+        <property name="user" value="root"></property>
+        <property name="password" value="123456"></property>
+    </bean>
+<!--    dao-->
+    <bean id="accountDao" class="dao.AcountDaoImpl">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+<!--    service-->
+    <bean id="serviceId" class="service.AccountServiceImpl">
+        <property name="acountDao" ref="accountDao"></property>
+        <property name="transactionTemplate" ref="transactionTemplate"></property>
+    </bean>
+<!--    创建模板-->
+    <bean id="transactionTemplate" class="org.springframework.transaction.support.TransactionTemplate">
+        <property name="transactionManager" ref="txManager"></property>
+    </bean>
+<!--&lt;!&ndash;    配置事务管理器,管理器需要事务，事务从Connection获得，连接从连接池DataSource获得&ndash;&gt;-->
+<!--    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">-->
+<!--        <property name="dataSource" ref="dataSource"></property>-->
+<!--    </bean>-->
+<!--&lt;!&ndash;    事务详情，在Aop筛选的举出上，对ABC三个确定使用什么样的事务。例如AC读写，B只读-->
+<!--    <tx:attributes>用于配置事务详情-->
+<!--    <tx:method>详情具体配置-->
+<!--    propagation传播行为-->
+<!--    REQUIRES_NEW必须是新的-->
+<!--    isolation隔离级别-->
+<!--    &ndash;&gt;-->
+<!--    <tx:advice id="txAdvice" transaction-manager="txManager">-->
+<!--        <tx:attributes>-->
+<!--            <tx:method name="transfer" propagation="REQUIRED" isolation="DEFAULT"/>-->
+<!--        </tx:attributes>-->
+<!--    </tx:advice>-->
+<!--&lt;!&ndash;    AOP编程，目标类有ABCD四个连接点，切入点表达式确定增强的连接器，从而获得切入点，ABC&ndash;&gt;-->
+<!--    <aop注解:config>-->
+<!--        <aop注解:advisor advice-ref="txAdvice" pointcut="execution(* service..*.*(..))"/>-->
+<!--    </aop注解:config>-->
+
+<!--    事务管理注解-->
+<!--    创建事务管理器-->
+    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+<!--    将管理器交予spring
+    transaction-manager配置事务管理器
+    proxy-target-class true底层强制使用CGLIB代理
+    -->
+    <tx:annotation-driven transaction-manager="txManager"></tx:annotation-driven>
+</beans>
